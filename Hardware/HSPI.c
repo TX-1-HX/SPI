@@ -52,17 +52,37 @@ void SPI_BaseConfig_Stop(void)
 
 uint8_t SPI_BaseConfig_SwapData(uint8_t SendData)
 {
-    uint8_t ReceiveData;
+    uint8_t ReceiveData = 0X00;
+
     /*mode0，在SCK为低电平时移除数据，在SCK第一个边沿移入数据，直至八位*/
+
+    /*掩码的形式发送和接收数据*/
+    /*
     for(uint8_t i = 0; i < 8; i++)
     {
-        HSPI_W_MOSI(SendData & (0X80 >> 1));
+        HSPI_W_MOSI(SendData & (0X80 >> i));
         HSPI_W_SCK(1);
         if(HSPI_R_MISO() == 1)
         {
-            ReceiveData = ReceiveData|(0X80 >> 1);
+            ReceiveData = ReceiveData|(0X80 >> i);
         }
         HSPI_W_SCK(0);
+    }
+    return ReceiveData;
+    */
+
+    /*交换的形式发送和接收数据*/
+    for(uint8_t i = 0; i<8; i++)
+    {
+        HSPI_W_MOSI(SendData & 0x80);
+        SendData = SendData << 1;
+        HSPI_W_SCK(1);
+        if(HSPI_R_MISO() == 1)
+        {
+            SendData = (SendData | 0x01);
+        }
+        HSPI_W_SCK(0);
+        ReceiveData = SendData;
     }
     return ReceiveData;
 }
